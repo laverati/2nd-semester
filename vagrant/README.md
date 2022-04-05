@@ -41,8 +41,8 @@ ansible-playbook nginx.yml
 ---
 Кастомная страница web1
 
-![Кастомная страница web1 с адресом 192.168.11.111:8080](web1)
+<a href="https://ibb.co/Kx3ZYyk"><img src="https://i.ibb.co/VYPydBZ/2022-04-04-15-03-28.png" alt="2022-04-04-15-03-28" border="0"></a>
 
 Кастомная страница web2
 
-![Кастомная страница web1 с адресом 192.168.11.112:8080](web2)
+<a href="https://ibb.co/y4Z3J9V"><img src="https://i.ibb.co/bbCfn07/2022-04-04-15-03-58.png" alt="2022-04-04-15-03-58" border="0"></a>
