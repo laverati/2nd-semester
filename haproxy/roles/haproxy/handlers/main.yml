@@ -1,0 +1,13 @@
+---
+# handlers file for webs
+- name: restart haproxy
+  systemd:
+    state: restarted
+    name: haproxy
+    enabled: yes
+
+- name: restart keepalived
+  systemd:
+    state: restarted
+    name: keepalived
+    enabled: yes

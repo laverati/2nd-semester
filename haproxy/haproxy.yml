@@ -1,0 +1,18 @@
+---
+- name: Nginx for webservers
+  hosts: webservers
+  remote_user: root
+  roles:
+    - webs
+    
+#- name: Nginx
+#  hosts: rrobin
+#  roles:
+#    - robin	
+
+- name: haproxy 
+  hosts: haproxy
+  roles:
+    - haproxy
+    
+    

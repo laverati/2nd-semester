@@ -1,0 +1,28 @@
+- name: install haproxy from repo
+  yum:
+    name: 
+      - haproxy
+      - keepalived
+    state: latest
+  
+- name: Copy file with owner and permissions
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.conf
+  notify: 
+    - restart haproxy
+  tags: 
+    - haproxy-cfg
+
+- name: config keepalive
+  template:
+    src: keepalived.conf
+    dest: /etc/keepalived/keepalived.conf
+  notify: 
+    - restart keepalived
+  tags: 
+    - keepalive-cfg
+    
+
+    
+
