@@ -11,8 +11,8 @@
 
 ## Дано:
 * Vagrantfile, который состоит из:
-  + pg1, pg2 - сервера
-  + dcs1, dcs2, dcs3 - диски
+  + pg1, pg2 - диски
+  + dcs1, dcs2, dcs3
 * Готовая роль consul.play
 * inventory
 * ansible.cfg
@@ -27,7 +27,7 @@ ansible-playbook consul.play
 
 2. Создаем диски sdb, sdc:
 ````
-vgcreate pgdata /dev/"название диска"
+vgcreate pgdata /dev/"dcs"
 ````
 
 3. На дисках необходимо выполнить следующее:
