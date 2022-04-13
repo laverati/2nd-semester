@@ -78,17 +78,12 @@ systemctl enable patroni-watchdog.service
  systemctl start vip-manager
  systemctl enable vip-manager
  ````
- 14. Проверяем интерфейс на __pg2__
+ 14. Пишем в консоль команду __patronictl -c /opt/app/patroni/etc/postgresql.yml list__
+<a href="https://ibb.co/Z6YbBdY"><img src="https://i.ibb.co/WWPRknP/2022-04-13-11-07-21.png" alt="2022-04-13-11-07-21" border="0"></a>
 
+Проверяем интерфейс
 
-<a href="https://ibb.co/2gnd300"><img src="https://i.ibb.co/18vTGYY/2022-04-12-14-07-01.png" alt="2022-04-12-14-07-01" border="0"></a>
-
-Пишем в консоль команду __patronictl switchover__, конкретно в моем случае команда немного изменена
-<a href="https://ibb.co/8KdJSdd"><img src="https://i.ibb.co/ZLY3kYY/2022-04-12-14-06-31.png" alt="2022-04-12-14-06-31" border="0"></a>
-
-И еще раз проверяем интерфейс
-
-<a href="https://ibb.co/1MshVSC"><img src="https://i.ibb.co/Jqx0LhY/2022-04-12-14-07-35.png" alt="2022-04-12-14-07-35" border="0"></a>
+<a href="https://ibb.co/QQr8s7r"><img src="https://i.ibb.co/pwJWC6J/2022-04-13-11-06-20.png" alt="2022-04-13-11-06-20" border="0"></a>  
 
 Он успешно переехал! :)
 
