@@ -11,7 +11,7 @@
 
 ## Дано:
 * Vagrantfile, который состоит из:
-  + pg1, pg2 - диски
+  + pg1, pg2 
   + dcs1, dcs2, dcs3
 * Готовая роль consul.play
 * inventory
