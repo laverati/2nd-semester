@@ -1,0 +1,168 @@
+---
+- name: Update web servers
+  hosts: pg
+  remote_user: root
+
+  tasks:
+  - name: Create a volume group on top of /dev/sdb
+    community.general.lvg:
+      vg: pg_data
+      pvs: /dev/sdb
+
+  - name: Create a volume group on top of /dev/sdc
+    community.general.lvg:
+      vg: pg_wal
+      pvs: /dev/sdc
+
+  - name: Create a logical volume the size of all remaining space in the volume group
+    community.general.lvol:
+      vg: pg_data
+      lv: pg_data
+      size: 100%FREE
+
+  - name: Create a logical volume the size of all remaining space in the volume group
+    community.general.lvol:
+      vg: pg_wal
+      lv: pg_wal
+      size: 100%FREE
+      
+  - name: Create a xfs filesystem on /dev/sdb
+    community.general.filesystem:
+      fstype: xfs
+      dev: /dev/mapper/pg_data-pg_data
+
+  - name: Create a xfs filesystem on /dev/sdc
+    community.general.filesystem:
+      fstype: xfs
+      dev: /dev/mapper/pg_wal-pg_wal
+  
+  - name: Install postgres from a remote repo
+    yum:
+      name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+      state: present
+
+  - name: Install the latest version of Postgres
+    yum:
+      name: postgresql14-server
+      state: latest
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /pgsql/
+      state: directory
+      owner: postgres
+      group: postgres
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /pgsql/pg_data
+      state: directory
+      owner: postgres
+      group: postgres   
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /pgsql/pg_wal
+      state: directory
+      owner: postgres
+      group: postgres
+
+  - name: pg_data hands
+    command: chown postgres.postgres /pgsql/pg_data
+
+  - name: pg_wal hands
+    command: chown postgres.postgres /pgsql/pg_wal 
+  
+  - name: Copy patroni
+    ansible.builtin.copy:
+      src: patroni-2.0.2-1.rhel7.x86_64.rpm
+      dest: /home/vagrant
+
+  - name: Install patroni rpm from a local file
+    yum:
+      name: /home/vagrant/patroni-2.0.2-1.rhel7.x86_64.rpm
+      state: present
+
+  - name: Mount up device by label
+    ansible.posix.mount:
+      path: /pgsql/pg_data
+      src: /dev/mapper/pg_data-pg_data
+      fstype: xfs
+      state: present
+
+  - name: Mount up device by label
+    ansible.posix.mount:
+      path: /pgsql/pg_wal
+      src: /dev/mapper/pg_wal-pg_wal
+      fstype: xfs
+      state: present
+  
+  - name: CHOWN again
+    command: chown -R postgres.postgres /pgsql/
+  
+  - name: Touch a file
+    ansible.builtin.file:
+      path: /opt/app/patroni/etc/postgresql.yml
+      state: touch
+      owner: postgres
+      group: postgres
+    tags: patroni
+
+  - name: Template a file to /etc/file.conf
+    ansible.builtin.template:
+      src: postgresql.j2
+      dest: /opt/app/patroni/etc/postgresql.yml
+      owner: postgres
+      group: postgres
+    tags: patroni
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /var/log/patroni
+      state: directory
+      owner: postgres
+      group: postgres
+    tags: patroni
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /var/log/postgres
+      state: directory
+      owner: postgres
+      group: postgres
+    tags: patroni
+  
+  - name: Make sure a service patroni-watchdog is running
+    ansible.builtin.systemd:
+      state: restarted
+      name: patroni-watchdog
+      enabled: yes
+    tags: patroni
+
+  - name: Make sure a service patroni is running
+    ansible.builtin.systemd:
+      state: restarted
+      name: patroni
+      enabled: yes
+    tags: patroni
+  
+  - name: Install vip-manager from a remote repo
+    yum:
+      name: https://github.com/cybertec-postgresql/vip-manager/releases/download/v1.0.2/vip-manager-1.0.2-1.x86_64.rpm
+      state: present
+    tags: vip
+ 
+  - name: Template a file to /etc/file.conf
+    ansible.builtin.template:
+      src: vip-manager.yml.j2
+      dest: /etc/default/vip-manager.yml
+      owner: postgres
+      group: postgres
+    tags: vip
+  
+  - name: Make sure a service vip is running
+    ansible.builtin.systemd:
+      state: restarted
+      name: vip-manager
+      enabled: yes
+    tags: vip
