@@ -1,0 +1,110 @@
+---
+- name: NFS Create
+  hosts: nfs
+  remote_user: root
+
+  tasks:
+
+  - name: Install the latest version of NFS
+    yum:
+      name: nfs-utils
+      state: latest
+
+  - name: Create a volume group on top of /dev/sdb
+    community.general.lvg:
+      vg: backup
+      pvs: /dev/sdb
+  
+  - name: Create a logical volume the size of all remaining space in the volume group
+    community.general.lvol:
+      vg: backup
+      lv: backup
+      size: 100%VG
+
+  - name: Create a xfs filesystem on /dev/sdb
+    community.general.filesystem:
+      fstype: xfs
+      dev: /dev/mapper/backup-backup
+
+  - name: Mount up device by label
+    ansible.posix.mount:
+      path: /srv/backup
+      src: /dev/mapper/backup-backup
+      fstype: xfs
+      state: mounted
+
+  - name: Ensure group "postgres" exists with correct gid
+    ansible.builtin.group:
+      name: postgres
+      state: present
+      gid: 26
+
+  - name: Add the user 'johnd' with a specific uid and a primary group of 'admin'
+    ansible.builtin.user:
+      name: postgres
+      uid: 26
+      group: postgres
+
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /srv/backup
+      state: directory
+      owner: postgres
+      group: postgres
+
+  - name: Add a line to a file if the file does not exist, without passing regexp
+    ansible.builtin.lineinfile:
+      path: /etc/exports
+      line: /srv/backup 192.168.11.0/24(rw,sync,no_root_squash,no_all_squash)
+      create: yes
+
+  - name: Make sure a service nfs is running
+    ansible.builtin.systemd:
+      state: restarted
+      name: nfs
+      enabled: yes
+
+  - name: Exportfs
+    command: exportfs -av
+- name: NFS for PG
+  hosts: pg
+  remote_user: root
+
+  tasks:
+  - name: Install the latest version of NFS
+    yum:
+      name: nfs-utils
+      state: latest
+  
+  - name: Create a directory if it does not exist
+    ansible.builtin.file:
+      path: /pgsql/pg_backup
+      state: directory
+      owner: postgres
+      group: postgres
+  
+  - name: Mount NFS volumes with noauto according to boot option
+    ansible.posix.mount:
+      src: 192.168.11.40:/srv/backup
+      path: /pgsql/pg_backup
+      state: mounted
+      fstype: nfs
+  - name: Add repo
+    yum:
+      name: https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-centos.noarch.rpm
+  
+  - name: Install pgprobackup
+    yum:
+      name: pg_probackup-14
+  
+  - name: Init backup
+    shell: "pg_probackup-14 init -B /pgsql/pg_backup"
+    become_user: postgres
+    become: true
+    ignore_errors: true
+  
+  - name: Add instance backup
+    shell: "pg_probackup-14 add-instance -B /pgsql/pg_backup -D /pgsql/pg_data/14 --instance sirius"
+    become_user: postgres
+    become: true
+    ignore_errors: true
